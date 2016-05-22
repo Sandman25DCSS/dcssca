@@ -1219,7 +1219,7 @@ int actor_apply_cloud(actor *act)
         && cloud.type != CLOUD_STORM
 		&& final_damage > 0) // handled elsewhere
     {
-        cloud.announce_actor_engulfed(act, final_damage < 0);
+        cloud.announce_actor_engulfed(act, final_damage < 0, final_damage);
     }
     if (player && cloud_max_base_damage > 0 && resist > 0
         && (cloud.type != CLOUD_STORM || final_damage > 0)
@@ -1549,7 +1549,7 @@ string cloud_struct::cloud_name(bool terse) const
 }
 
 void cloud_struct::announce_actor_engulfed(const actor *act,
-                                           bool beneficial) const
+                                           bool beneficial, int final_damage) const
 {
     ASSERT(act); // XXX: change to const actor &act
     if (_cloud_is_cosmetic(type))
@@ -1563,11 +1563,11 @@ void cloud_struct::announce_actor_engulfed(const actor *act,
     const bool unmodified = cloud_name() == cloud_type_name(type, false);
     if (!raincloud || !unmodified)
     {
-        mprf("%s %s in %s.",
+        mprf("%s %s in %s. (%d)",
              act->name(DESC_THE).c_str(),
              beneficial ? act->conj_verb("bask").c_str()
                         : (act->conj_verb("are") + " engulfed").c_str(),
-             cloud_name().c_str());
+             cloud_name().c_str(), final_damage);
         return;
     }
 
