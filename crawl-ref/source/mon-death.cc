@@ -502,8 +502,8 @@ item_def* place_monster_corpse(const monster& mons, bool silent, bool force)
     {
         const int amount = max_corpse_chunks(corpse.mon_type);
 
-        const int sp_gain = div_rand_round(amount * qpow(10, 3, 2, gain_stamina), 10);
-        int hp_gain = div_rand_round(amount * qpow(10, 3, 2, gain_health), 10);
+        const int sp_gain = div_rand_round(amount * qpow(10, 3, 2, gain_stamina), 5);
+        int hp_gain = div_rand_round(amount * qpow(10, 3, 2, gain_health), 5);
 
         if (gain_stamina)
             inc_sp(sp_gain, true);
@@ -536,8 +536,10 @@ item_def* place_monster_corpse(const monster& mons, bool silent, bool force)
         maybe_drop_monster_hide(corpse);
         if (mons_corpse_effect(corpse.mon_type) == CE_MUTAGEN)
         {
-            const int chunk_count = random2(max_corpse_chunks(corpse.mon_type));
-            for (int i = 0; i < chunk_count; i++)
+            int potion_count = random2(max_corpse_chunks(corpse.mon_type));
+            potion_count = max(1, potion_count / 2);
+
+            for (int i = 0; i < potion_count; i++)
             {
                 int id = items(false, OBJ_POTIONS, POT_WEAK_MUTATION, 0);
                 if (id != NON_ITEM)
@@ -1787,8 +1789,7 @@ item_def* monster_die(monster* mons, killer_type killer,
     if (invalid_monster(mons))
         return nullptr;
 
-    if (mons->mp_freeze)
-        summoned_monster_died(mons, killer != KILL_RESET);
+    monster_died(mons, killer);
 
     const bool was_visible = you.can_see(*mons);
 

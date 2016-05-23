@@ -213,6 +213,7 @@ static const vector<brand_weight_tuple> SBL_BRANDS = {
     { SPWPN_VAMPIRISM, 4 },
     { SPWPN_FLAMING, 4 },
     { SPWPN_FREEZING, 4 },
+    { SPWPN_EVASION,   2 },
     { SPWPN_DISTORTION, 1 },
     { SPWPN_ANTIMAGIC, 1 },
 };
@@ -288,16 +289,21 @@ static const vector<brand_weight_tuple> POLEARM_BRANDS = {
     { SPWPN_DISTORTION,  2 },
     { SPWPN_PAIN,        2 },
     { SPWPN_ANTIMAGIC,   2 },
+    { SPWPN_EVASION,     1 },
     { SPWPN_HOLY_WRATH,  1 },
 };
 
 /// brand weights for most ranged weapons.
 static const vector<brand_weight_tuple> RANGED_BRANDS = {
-    { SPWPN_NORMAL,   50 },
+    { SPWPN_NORMAL,   75 },
+    /*
     { SPWPN_FLAMING,  24 },
     { SPWPN_FREEZING, 12 },
+     */
     { SPWPN_EVASION,   8 },
     { SPWPN_VORPAL,    6 },
+    { SPWPN_ANTIMAGIC, 1 },
+    { SPWPN_HOLY_WRATH,1 },
 };
 
 /// brand weights for holy (TSO-blessed) weapons.
@@ -396,7 +402,7 @@ static const weapon_def Weapon_prop[] =
         DAMV_CRUSHING | DAM_PIERCE, 1, 10, {} },
 
     // Short Blades
-    { WPN_DAGGER,            "dagger",              4,  6, 10, 5,
+    { WPN_DAGGER,            "dagger",              4,  6, 10, 3,
         SK_SHORT_BLADES, SIZE_LITTLE,  SIZE_LITTLE, MI_NONE,
         DAMV_PIERCING, 10, 10, {
             { SPWPN_VENOM,          28 },
@@ -559,7 +565,7 @@ static const weapon_def Weapon_prop[] =
         }},
 
     // Range weapons
-    { WPN_BLOWGUN,           "blowgun",             0,  2, 10, 5,
+    { WPN_BLOWGUN,           "blowgun",             0,  2, 10, 3,
         SK_THROWING,     SIZE_LITTLE,  SIZE_LITTLE, MI_NEEDLE,
         DAMV_NON_MELEE, 5, 0, {
             { SPWPN_EVASION,  3 },
@@ -787,10 +793,13 @@ bool curse_a_slot(int power)
     while (slot_to_curse == -1 && tries++ < 50)
     {
         int slot = random2(NUM_EQUIP);
-        if (you_can_wear((equipment_type) slot) != MB_FALSE)
+        maybe_bool can_wear = you_can_wear((equipment_type) slot);
+        if (can_wear != MB_FALSE && can_wear != MB_MAYBE)
+        {
             if (coinflip() && slot != EQ_WEAPON && slot < EQ_LEFT_RING)
                 continue;
             slot_to_curse = slot;
+        }
     }
 
     if (slot_to_curse > -1)

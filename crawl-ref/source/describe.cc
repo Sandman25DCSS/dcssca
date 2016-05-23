@@ -844,7 +844,7 @@ static void _append_weapon_stats(string &description, const item_def &item)
       make_stringf("\n (Your skill: %.1f)", (float) you.skill(skill, 10) / 10)
       : "";
     description += make_stringf(
-    "\nBase accuracy: %+d   Base damage: %d   Base SP cost: %d"
+    "\nBase accuracy: %+d   Base damage: %d   Current SP cost: %d"
     "\nAttack delay:  Base: %.1f   Current: %.1f"
     "\nThis weapon's minimum attack delay (%.1f) is reached at skill level %d."
     "%s",
@@ -1210,8 +1210,7 @@ static string _describe_ammo(const item_def &item)
             description += "It is coated with poison.";
             break;
         case SPMSL_CURARE:
-            description += "It is tipped with impact poison. It is twice as "
-                           "likely to be destroyed on impact as other needles.";
+            description += "It is tipped with impact poison.";
             break;
         case SPMSL_PARALYSIS:
             description += "It is tipped with a paralysing substance.";

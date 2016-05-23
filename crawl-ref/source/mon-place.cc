@@ -276,10 +276,9 @@ static void _apply_ood(level_id &place)
     // moderate OODs go up to 100% after a ramp-up period.
 
     if (place.branch == BRANCH_DUNGEON
-    	&& crawl_state.difficulty != DIFFICULTY_NIGHTMARE
         && (place.depth == 1 && env.turns_on_level < 701
          || place.depth == 2 && (env.turns_on_level < 584 || one_chance_in(4)))
-		 || place.depth < 6 && crawl_state.difficulty <= DIFFICULTY_STANDARD)
+        )
     {
         return;
     }
@@ -288,8 +287,7 @@ static void _apply_ood(level_id &place)
     level_id old_place = place;
 #endif
 
-    if (x_chance_in_y(_scale_spawn_parameter(140, 1000, 1000, 3000, 4800),
-                      1000))
+    if (x_chance_in_y(_scale_spawn_parameter(140, 1000, 1000, 3000, 4800), 1000))
     {
         const int fuzzspan = 5;
         const int fuzz = max(0, random_range(-fuzzspan, fuzzspan, 2));
@@ -304,9 +302,9 @@ static void _apply_ood(level_id &place)
     }
 
     // On D:13 and deeper, and for those who tarry, something extreme:
+    const bool super_chance = x_chance_in_y(_scale_spawn_parameter(2, 10000, 10000, 3000, 9000), 10000);
     if (Options.exp_percent_from_monsters > 0 && env.turns_on_level > 1400 - place.absdepth() * 117
-        && x_chance_in_y(_scale_spawn_parameter(2, 10000, 10000, 3000, 9000),
-                         10000))
+        && super_chance)
     {
         // this maxes depth most of the time
         place.depth += random2avg(27, 2);
@@ -382,7 +380,7 @@ void spawn_random_monsters()
     if (player_in_branch(BRANCH_ABYSS))
     {
         if (!player_in_starting_abyss())
-            rate = 5;
+            rate = 20;
         if (have_passive(passive_t::slow_abyss))
             rate *= 2;
     }
@@ -469,6 +467,7 @@ monster_type pick_random_monster(level_id place,
     if (allow_ood)
         _apply_ood(place);
 
+    place.depth = rune_curse_depth_adjust(place.depth);
     place.depth = min(place.depth, branch_ood_cap(place.branch));
 
     if (final_place)
@@ -839,6 +838,21 @@ static bool _in_ood_pack_protected_place()
     return env.turns_on_level < 1400 - env.absdepth0 * 117;
 }
 
+void _prep_summoned_monster(const mgen_data &mg, monster* &mon)
+{
+    if (mg.summon_type && mon && mon->is_player_summon())
+    {
+        const spell_type spell = (const spell_type) mg.summon_type;
+        if (!player_summoned_monster(spell, mon, true))
+        {
+            mons_remove_from_grid(mon);
+            mon->destroy_inventory();
+            monster_cleanup(mon);
+            mon = 0;
+        }
+    }
+}
+
 monster* place_monster(mgen_data mg, bool force_pos, bool dont_place)
 {
 #ifdef DEBUG_MON_CREATION
@@ -1063,6 +1077,8 @@ monster* place_monster(mgen_data mg, bool force_pos, bool dont_place)
 
     monster* mon = _place_monster_aux(mg, 0, place, force_pos, dont_place);
 
+    _prep_summoned_monster(mg, mon);
+
     // Bail out now if we failed.
     if (!mon)
         return 0;
@@ -1176,10 +1192,12 @@ monster* place_monster(mgen_data mg, bool force_pos, bool dont_place)
             }
             else if (mon->type == MONS_KIRKE)
                 member->props["kirke_band"] = true;
+
+            _prep_summoned_monster(band_template, member);
         }
     }
 
-    // Placement of first monster, at least, was a success.
+    // Placement if first monster, at least, was a success.
     return mon;
 }
 
@@ -1326,7 +1344,7 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
         define_zombie(mon, ztype, mg.cls);
     }
     else
-        define_monster(mon);
+        define_monster(mon, mg.behaviour);
 
     if (mon->type == MONS_MUTANT_BEAST)
     {
@@ -1477,7 +1495,7 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
 
     if (!crawl_state.game_is_arena())
     {
-        mon->max_hit_points = min(rune_curse_hp_adjust(mon->max_hit_points), MAX_MONSTER_HP);
+        mon->max_hit_points = min(mon->max_hit_points, MAX_MONSTER_HP);
         mon->hit_points = mon->max_hit_points;
     }
 
@@ -1818,10 +1836,6 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
     {
         gozag_set_bribe(mon);
     }
-
-    const int old_hd = mon->get_hit_dice();
-    const int new_hd = rune_curse_hd_adjust(old_hd);
-    mon->set_hit_dice(new_hd);
 
     return mon;
 }
@@ -3318,13 +3332,6 @@ monster* create_monster(mgen_data mg, bool fail_msg, bool first)
 
         if (!summd && fail_msg && you.see_cell(mg.pos))
             mpr("You see a puff of smoke.");
-    }
-
-    if (mg.summon_type && summd && summd->is_player_summon())
-    {
-        const spell_type spell = (const spell_type) mg.summon_type;
-        if (!player_summoned_monster(spell, summd, first))
-            summd = 0;
     }
 
     return summd;

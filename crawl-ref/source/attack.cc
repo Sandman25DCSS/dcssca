@@ -98,7 +98,7 @@ bool attack::handle_phase_damaged()
     }
 
     announce_hit();
-    // Inflict s			tored damage
+    // Inflict stored damage
     damage_done = inflict_damage(damage_done);
 
     // TODO: Unify these, added here so we can get rid of player_attack
@@ -227,7 +227,10 @@ int attack::calc_to_hit(bool random)
         mhit = maybe_random2(mhit, random);
         */
 
-        mhit = player_tohit_modifier(mhit);
+        int range = 1;
+        if (attacker && defender)
+            range = grid_distance(attacker->pos(), defender->pos());
+        mhit = player_tohit_modifier(mhit, range);
     }
     else    // Monster to-hit.
     {
@@ -388,9 +391,6 @@ void attack::init_attack(skill_type unarmed_skill, int attack_number)
 
     if (attacker->is_player())
     {
-        const item_def *weapon_used = get_weapon_used(true);
-        sp_cost = weapon_sp_cost(weapon_used);
-
         you.last_tohit = to_hit;
         you.redraw_tohit = true;
     }
@@ -1317,6 +1317,9 @@ int attack::player_apply_final_multipliers(int damage)
     // Can't affect much of anything as a shadow.
     if (you.form == TRAN_SHADOW)
         damage = div_rand_round(damage, 2);
+
+    const int range = grid_distance(attacker->pos(), defender->pos());
+    damage = player_damage_modifier(damage, false, range);
 
     return damage;
 }

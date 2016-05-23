@@ -122,7 +122,6 @@ public:
     int hunger;
     int disease;
     hunger_state_t hunger_state;
-    hunger_state_t target_hunger_state;
     uint8_t max_level;
     int hit_points_regeneration;
     int magic_points_regeneration;
@@ -228,7 +227,7 @@ public:
     string jiyva_second_name;       // Random second name of Jiyva
     uint8_t piety;
     uint8_t piety_hysteresis;       // amount of stored-up docking
-    uint8_t gift_timeout;
+    int gift_timeout;
     uint8_t saved_good_god_piety;   // for if you "switch" between E/Z/1 by abandoning one first
     god_type previous_good_god;
     FixedVector<uint8_t, NUM_GODS>  penance;
@@ -454,6 +453,7 @@ public:
     package *save;
     int last_hit_chance;
     int last_tohit;
+    uint8_t monsters_recently_seen;
 
 protected:
     FixedVector<PlaceInfo, NUM_BRANCHES> branch_info;
@@ -1027,10 +1027,10 @@ void remove_from_summoned(mid_t mid);
 void forget_map(bool rot = false);
 
 int get_exp_progress();
-void gain_exp(unsigned int exp_gained, unsigned int* actual_gain = nullptr, bool from_monster = true, bool exp_loss = false);
+void gain_exp(unsigned int exp_gained, unsigned int* actual_gain = nullptr, bool from_monster = true, bool exp_loss = false, bool skip_training = false);
 const int potion_experience_for_this_floor();
 const int floor_experience_for_this_floor();
-void gain_potion_exp();
+void gain_potion_exp(bool skip_training=false);
 void gain_floor_exp();
 
 bool player_can_open_doors();
@@ -1055,10 +1055,10 @@ void calc_mp();
 void recalc_and_scale_hp();
 
 bool dec_hp(int hp_loss, bool fatal, const char *aux = nullptr);
-bool dec_mp(int mp_loss, bool silent = false);
+bool dec_mp(int mp_loss, bool silent = false, bool allow_overdrive = false);
+bool dec_sp(int sp_loss = 1, bool silent = false, bool allow_overdrive = false);
 bool drain_mp(int mp_loss);
 
-bool dec_sp(int sp_loss = 1, bool silent = false);
 void inc_sp(int sp_gain = 1, bool silent = false, bool manual = true);
 void inc_mp(int mp_gain, bool silent = false);
 void inc_hp(int hp_gain);
@@ -1069,7 +1069,7 @@ void rot_hp(int hp_loss);
 int unrot_hp(int hp_recovered);
 int player_rotted();
 void rot_mp(int mp_loss);
-void freeze_summons_mp(int mp_loss);
+bool freeze_summons_mp(int mp_loss);
 void unfreeze_summons_mp(int amount = -1);
 
 void inc_max_hp(int hp_gain);
@@ -1147,10 +1147,11 @@ bool need_expiration_warning(coord_def p = you.pos());
 
 bool player_is_tired(bool silent = false);
 bool player_is_very_tired(bool silent = false);
-bool player_mp_is_exhausted(bool silent);
+bool player_is_exhausted(bool silent = false);
+bool player_mp_is_exhausted(bool silent = false);
 bool player_sp_is_exhausted(bool silent = false);
 bool in_quick_mode();
-void set_quick_mode(const bool new_quick_mode);
+void set_quick_mode(const bool new_quick_mode, const bool automatic = false);
 void set_exertion(const exertion_mode new_exertion, bool manual = true);
 void exert_toggle(exertion_mode new_exertion);
 
@@ -1159,7 +1160,7 @@ int get_hp_max();
 int get_sp();
 int get_sp_max();
 int get_mp();
-int get_mp_max();
+int get_mp_max(bool raw = false);
 
 bool player_has_orb();
 bool player_on_orb_run();
@@ -1207,9 +1208,11 @@ bool can_use(const item_def &item);
 bool player_is_immune_to_curses();
 const int get_max_exp_level();
 const int get_max_skill_level();
-const int rune_curse_hd_adjust(int hd);
-const int rune_curse_hp_adjust(int hp);
-const int rune_curse_dam_adjust(int dam);
+const int rune_curse_hd_adjust(int hd, bool absolute = true);
+const int rune_curse_hp_adjust(int hp, bool absolute = true);
+const int rune_curse_dam_adjust(int dam, bool absolute = true);
+const int rune_curse_depth_adjust(int depth);
+void player_summon_was_shot_through(monster* mon);
 void player_was_offensive();
 void player_attacked_something(int sp_cost);
 void player_used_magic(int mp_cost);
@@ -1221,18 +1224,27 @@ void player_after_each_turn();
 
 int spell_mp_cost(spell_type which_spell);
 int spell_mp_freeze(spell_type which_spell);
-int weapon_sp_cost(const item_def* weapon);
-int player_tohit_modifier(const int old_tohit);
-int player_damage_modifier(int old_damage, bool silent = false);
+int weapon_sp_cost(const item_def* weapon, const item_def* ammo = nullptr);
+int player_tohit_modifier(const int old_tohit, int range = 1);
+int player_damage_modifier(int old_damage, bool silent = false, const int range = 1);
 int player_spellpower_modifier(int old_spellpower);
 int player_spellfailure_modifier(int spellfaifailureure);
 int player_attack_delay_modifier(int attk_delay);
 int player_stealth_modifier(int old_stealth);
-int player_evasion_modifier(int old_evasion);
+int player_ev_modifier(int ev);
+int player_sh_modifier(int sh);
+int player_ac_modifier(int ac);
+int player_item_gen_modifier(int item_count);
 void player_update_last_hit_chance(int chance);
 void player_update_tohit(int new_tohit = -1);
+int player_pool_modifier(int amount);
 void summoned_monster_died(monster* mons, bool natural_death);
 bool player_summoned_monster(spell_type spell, monster* mons, bool first);
+int player_monster_gen_modifier(int amount);
 int player_ouch_modifier(int damage);
+int player_summon_count();
+void attempt_instant_rest();
+void monster_died(monster* mons, killer_type killer);
+void after_floor_change();
 
 #endif

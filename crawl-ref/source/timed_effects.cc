@@ -910,9 +910,11 @@ static void _jiyva_effects(int /*time_delta*/)
 static void _evolve(int time_delta)
 {
     if (int lev = player_mutation_level(MUT_EVOLUTION))
-        if (one_chance_in((lev > 1) ? 1 : 3)
+    {
+        const int chance = 4 - lev;
+        if (one_chance_in(chance * chance)
             && you.attribute[ATTR_EVOL_XP] * (1 + random2(10))
-               > (int)exp_needed(you.experience_level + 1))
+               > (int)exp_needed(you.experience_level + 1) / lev)
         {
             you.attribute[ATTR_EVOL_XP] = 0;
             mpr("You feel a genetic drift.");
@@ -932,6 +934,7 @@ static void _evolve(int time_delta)
             if (evol)
                 more();
         }
+    }
 }
 
 // Get around C++ dividing integers towards 0.
@@ -986,14 +989,14 @@ void handle_time()
     if ((player_in_branch(BRANCH_ABYSS) || player_on_orb_run()) && _div(base_time, 50) > _div(old_time, 50))
     {
         spawn_random_monsters();
-//        if (player_in_branch(BRANCH_ABYSS))
+        if (player_in_branch(BRANCH_ABYSS))
           for (int i = 1; i < you.depth; ++i)
                 if (x_chance_in_y(i, 5))
                     spawn_random_monsters();
     }
 
     // Labyrinth and Abyss maprot.
-    if (player_in_branch(BRANCH_LABYRINTH) || player_in_branch(BRANCH_ABYSS))
+    if (player_in_branch(BRANCH_ABYSS))
         forget_map(true);
 
     // Magic contamination from spells and Orb.

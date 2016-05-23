@@ -1,3 +1,53 @@
+## v1.5.2
+
+* Retreat simplification (instant rest)
+    * Instead of making it optimal for a player to retreat and recharge after every monster killed, the player is 
+      instantly fully recharged as soon as they have killed all nearby monsters. 
+    * If the player kills the last known monster, and there is another just beyond the edge of LOS, it is brought to
+      edge of LOS instead of player instant-resting.
+    * If instarest doesn't happen, that means there is an invisible monster nearby or you have seen a monster, 
+      but haven't actually killed it, and it has moved out of LOS. In this case you'll have to rest the old-fashioned
+      way.
+
+* Rune curse effects are now shown in rune list (show with '{').
+
+* Players can unsummon individual summoned friendlies by using the 'x' command, selecting the monster, and then 
+    pressing 'q'.
+    
+* Players can fire missiles through friendly summons, but when they do, their spell failure is checked for the
+  spell that summoned the creature. If it fails, the creature is unsummoned.
+    * Friendly fire does not work through other friendlies, such as animated dead and simulacrum. 
+
+* Set hp rot caps based on difficulty.
+    * Easy mode can't rot to less than 80% of hp.
+    * Standard: 60%
+    * Challenge: 40%
+    * Nightmare: 20%
+
+* Exhaustion mode is the same as normal mode before. 
+    * When you drop below 0 sp or mp, you enter exhaustion mode.
+    * In exhaustion mode, your basic attributes are a little lower than normal mode. 
+    * You are no longer exhausted once you have at least 5 mp and 5 sp. 
+    * There is a chance to rot player hp based on amount of sp or mp spent while exhausted.
+
+* Spells may be cast even when mp is empty.
+    * Except for spells which reduce max mp instead of consuming mp (like transmutations and summons).
+    
+* Focus mode now increases ac, sh, and ev slightly
+    * By paying closer attention to incoming attacks, a player can optimize their armour (making sure the enemy hits the
+      more fortified places) or increase their chance of dodging the attacks.
+
+* Power mode now doubles cost of action, whether it is MP *or* SP (before it only had an SP cost)
+* Focus mode now doubles cost of action, whether it is MP *or* SP (before it only had an MP cost)
+    * This means that spellcasters in power mode no longer consume SP when casting a spell, but instead must pay
+      double the spell cost. 
+
+* Monster HD slightly adjusted based on difficulty level
+    * Easy: -1
+    * Standard: 0 (unchanged)
+    * Challenge: +1
+    * Nightmare: +2
+
 ## v1.5.1
 
 * Exertion mode cost is based on action cost instead of a flat cost.
@@ -11,8 +61,6 @@
 * Drinking an experience potion no longer pull up a menu to choose skills. So allocate your training before you drink it.
 
 * Inner Flame is smite targetted now.
-
-* The player can fire missiles through friendlies now without hurting them.
 
 * Elyvilon improvements
     * Healing targeting shows pacification chance when a monster is selected.
@@ -94,10 +142,9 @@
     * MP cost is based on spellcasting, intelligence, spell level.
     * You can see how much spells cost in the 'S' spell list.
     * Fixed size MP pool like SP pool. Does not go up with experience level (XL).
-    * Power mode adds an SP cost to affected actions.
+    * Power and Focus mode doubles the SP or MP costs of an action.
         * In addition to increasing damage by 33%, power mode now increases attack speed by the same.
     * Careful mode renamed to focus mode.
-    * Focus mode adds an MP cost to affected actions.
     * Escape mode was removed and in it's place a separate quick / normal mode
         * This can operate independently of exertion mode, i.e. you can have Quick mode + Focus or Quick + Power mode.
         * Quick mode has the benefits of the old escape mode, which are faster movement speed. But

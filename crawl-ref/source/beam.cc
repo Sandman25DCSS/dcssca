@@ -500,7 +500,10 @@ void zappy(zap_type z_type, int power, bool is_monster, bolt &pbolt)
         pbolt.hit = (*hit_calc)(power);
 
         if (!is_monster)
+        {
+            const int range = grid_distance(pbolt.source, pbolt.target);
             pbolt.hit = player_tohit_modifier(pbolt.hit);
+        }
 
         if (pbolt.hit != AUTOMATIC_HIT && !is_monster)
             pbolt.hit = max(0, pbolt.hit - 5 * you.inaccuracy());
@@ -4016,7 +4019,7 @@ void bolt::affect_player()
         {
             if (hit_verb.empty())
                 hit_verb = engulfs ? "engulfs" : "hits";
-            mprf("The %s %s you! (%d)", name.c_str(), hit_verb.c_str(), hurted);
+            mprf("The %s %s you! (%d)", name.c_str(), hit_verb.c_str(), rune_curse_dam_adjust(hurted));
         }
 
         // Irresistible portion of resistable effect; must happen before MR
@@ -4898,6 +4901,12 @@ void bolt::affect_monster(monster* mon)
                     GOD_FEDHAS);
             }
         }
+
+        if (mon->mp_freeze)
+        {
+            player_summon_was_shot_through(mon);
+            return;
+        }
     }
 
     if (flavour == BEAM_WATER && mon->type == MONS_WATER_ELEMENTAL && !is_tracer)
@@ -5525,10 +5534,13 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
         }
 
         case BEAM_DISINTEGRATION:   // disrupt/disintegrate
-            if (simple_monster_message(mon, " is blasted."))
+        {
+            int hurt = damage.roll();
+            if (monster_message(mon, " is blasted (%d).", hurt))
                 obvious_effect = true;
-            mon->hurt(agent(), damage.roll(), flavour);
+            mon->hurt(agent(), hurt, flavour);
             return MON_AFFECTED;
+        }
 
         case BEAM_HIBERNATION:
             if (mon->can_hibernate())
@@ -6746,6 +6758,7 @@ bool shoot_through_monster(const bolt& beam, const monster* victim)
                /*
                && testbits(victim->flags, MF_DEMONIC_GUARDIAN)
                 */
+              && victim->mp_freeze
               && !beam.is_enchantment()
               && beam.origin_spell != SPELL_CHAIN_LIGHTNING
               && (mons_atts_aligned(victim->attitude, origin_attitude)

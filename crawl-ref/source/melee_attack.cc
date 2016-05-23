@@ -148,8 +148,11 @@ bool melee_attack::handle_phase_attempted()
         // Set delay now that we know the attack won't be cancelled.
         you.time_taken = you.attack_delay();
 
+        const item_def *weapon_used = get_weapon_used();
+        const int sp_cost = weapon_sp_cost(weapon_used);
+
         if (sp_cost)
-            dec_sp(sp_cost, true);
+            dec_sp(sp_cost, true, true);
 
         if (weapon)
         {
@@ -807,7 +810,6 @@ bool melee_attack::attack()
             shield_blocked = false;
         }
     }
-
 
     if(defender->is_player() && player_ephemeral_passthrough(atk_name(DESC_THE), true)) {
     	return false;

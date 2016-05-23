@@ -1383,7 +1383,7 @@ static void tag_construct_you(writer &th)
     marshallUByte(th, you.mp);
     marshallUByte(th, you.mp_max);
 
-    marshallUByte(th, you.target_hunger_state);
+    marshallUByte(th, you.monsters_recently_seen);
     marshallUByte(th, you.motion);
 
     COMPILE_CHECK(NUM_STATS == 3);
@@ -1538,7 +1538,7 @@ static void tag_construct_you(writer &th)
     for (god_iterator it; it; ++it)
         marshallByte(th, you.piety_max[*it]);
 
-    marshallByte(th, you.gift_timeout);
+    marshallInt(th, you.gift_timeout);
     marshallUByte(th, you.saved_good_god_piety);
     marshallByte(th, you.previous_good_god);
 
@@ -2382,7 +2382,7 @@ static void tag_read_you(reader &th)
     you.mp              = unmarshallUByte(th);
     you.mp_max          = unmarshallUByte(th);
 
-    you.target_hunger_state       = (hunger_state_t) unmarshallUByte(th);
+    you.monsters_recently_seen    = unmarshallUByte(th);
     you.motion                    = (motion_type) unmarshallUByte(th);
     you.last_tohit = 0;
     you.last_hit_chance = 0;
@@ -2940,12 +2940,6 @@ static void tag_read_you(reader &th)
         you.innate_mutation[MUT_SLOW_METABOLISM];
     }
 
-    if (th.getMinorVersion() < TAG_MINOR_NO_JUMP
-        && you.species == SP_FELID && you.innate_mutation[MUT_JUMP] != 0)
-    {
-        you.mutation[MUT_JUMP] = 0;
-    }
-
     // No minor version needed: all old felids should get MUT_PAWS.
     if (you.species == SP_FELID && you.innate_mutation[MUT_PAWS] < 1)
         you.mutation[MUT_PAWS] = you.innate_mutation[MUT_PAWS] = 1;
@@ -3135,7 +3129,7 @@ static void tag_read_you(reader &th)
     }
 #endif
 
-    you.gift_timeout   = unmarshallByte(th);
+    you.gift_timeout   = unmarshallInt(th);
 #if TAG_MAJOR_VERSION == 34
     if (th.getMinorVersion() < TAG_MINOR_SAVED_PIETY)
     {

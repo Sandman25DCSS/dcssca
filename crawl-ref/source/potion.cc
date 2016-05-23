@@ -666,6 +666,7 @@ public:
             // SIGHUP abuse.
 
             gain_potion_exp();
+            skill_menu(SKMF_EXPERIENCE, 750 * you.experience_level);
         }
         else
             mpr("A flood of memories washes over you.");
@@ -769,6 +770,7 @@ public:
 
         int amount = 0;
 
+        /*
         switch(crawl_state.difficulty)
         {
             case DIFFICULTY_EASY:
@@ -787,6 +789,8 @@ public:
                 // should not be possible
                 break;
         }
+         */
+        amount = 20 + random2(50);
 
         inc_sp(amount);
         mprf("This potion tastes like fruit juice. Energy courses through your body! (SP+%d)", amount);
